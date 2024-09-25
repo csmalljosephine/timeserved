@@ -1,0 +1,152 @@
+<HTML>
+	<LINK REL="StyleSheet" HREF="report.css" TYPE="text/css" TITLE="Yeehaw">
+		<HEAD>
+			<META NAME="GENERATOR" Content="Chance">
+		</HEAD>
+		<BODY onload="OnDisplay();">
+			<script>
+function OnDisplay()
+{
+	var ReleaseDay = new Date(opener.document.getElementById("releasedate").value);
+	var WeekDays = new Array(7);
+	var Day		= new Number;
+	WeekDays[0] = "Sunday";
+	WeekDays[1] = "Monday";
+	WeekDays[2] = "Tuesday";
+	WeekDays[3] = "Wednesday";
+	WeekDays[4] = "Thursday";
+	WeekDays[5] = "Friday";
+	WeekDays[6] = "Saturday";
+	
+	document.getElementById("today").value			= opener.document.getElementById("today").value;
+	document.getElementById("dpsst").value			= opener.document.getElementById("dpsst").value;
+	document.getElementById("idnumber").value		= opener.document.getElementById("idnumber").value;
+	document.getElementById("flname").value			= opener.document.getElementById("flname").value;
+	document.getElementById("startdate").value		= opener.document.getElementById("startdate").value;
+	document.getElementById("wpstartdate").value		= opener.document.getElementById("wpstartdate").value;
+	document.getElementById("dayssentenced").value		= opener.document.getElementById("dayssentenced").value;
+	document.getElementById("paroleviolation").value	= opener.document.getElementById("paroleviolation").value;
+	document.getElementById("timeserved").value		= opener.document.getElementById("timeserved").value;
+	document.getElementById("daysearnedpermonth").value	= opener.document.getElementById("daysearnedpermonth").value;
+	document.getElementById("previousdaysearned").value 	= opener.document.getElementById("previousearneddays").value;
+	document.getElementById("miscearneddays").value		= opener.document.getElementById("miscearneddays").value;
+	document.getElementById("dayslost").value		= opener.document.getElementById("dayslost").value;
+	document.getElementById("statedaysoff").value		= opener.document.getElementById("statedaysoff").value;
+	document.getElementById("workdaysoff").value		= opener.document.getElementById("workdaysoff").value;
+	document.getElementById("daystoserve").value		= opener.document.getElementById("daystoserve").value;
+	document.getElementById("comments").value		= opener.document.getElementById("comments").value;
+	
+	Day = ReleaseDay.getDay();
+	document.getElementById("releasedate").value = opener.document.getElementById("releasedate").value + " (" + WeekDays[Day] + ")";
+}
+			</script>
+			<input type="text" READONLY style="border-style:none; background-color: #ffffff" id="today" name="today">
+			<br>
+			<br>
+			<center><font face="tahoma" size="5">Josephine County<br>
+					Jail Time-run Computation</font></center>
+			<br>
+			<table cellpadding="0" cellspacing="0" border="0" align="center">
+				<tr>
+					<td width="280" align="right">DPSST:</td>
+					<td width="60">&nbsp;</td>
+					<td><input type="text" READONLY style="border-style:none; background-color: #ffffff" id="dpsst" name="dpsst"></td>
+				</tr>
+				<tr>
+					<td width="280" align="right">ID #:</td>
+					<td width="60">&nbsp;</td>
+					<td><input type="text" READONLY style="border-style:none; background-color: #ffffff" id="idnumber" name="idnumber"></td>
+				</tr>
+				<tr>
+					<td width="280" align="right">Name:</td>
+					<td width="60">&nbsp;</td>
+					<td><input type="text" READONLY SIZE="50,40" style="border-style:none; background-color: #ffffff" id="flname" name="flname"></td>
+				</tr>
+				<tr>
+					<td width="280" align="right">Sentence Start Date:</td>
+					<td width="60">&nbsp;</td>
+					<td><input type="text" READONLY style="border-style:none; background-color: #ffffff" id="startdate" name="startdate"></td>
+				</tr>
+				<tr>
+					<td width="280" align="right">Work Program Start Date:</td>
+					<td width="60">&nbsp;</td>
+					<td><input type="text" READONLY style="border-style:none; background-color: #ffffff" id="wpstartdate" name="wpstartdate"></td>
+				</tr>
+				<tr>
+					<td width="280" align="right">Days Sentenced:</td>
+					<td width="60">&nbsp;</td>
+					<td><input type="text" READONLY style="border-style:none; background-color: #ffffff" id="dayssentenced" name="dayssentenced"></td>
+				</tr>
+				<tr>
+					<td width="280" align="right">Parole Violation:</td>
+					<td width="60">&nbsp;</td>
+					<td><input type="text" READONLY style="border-style:none; background-color: #ffffff" id="paroleviolation" name="paroleviolation"></td>
+				</tr>
+				<tr>
+					<td width="280" align="right">&nbsp;</td>
+					<td width="60">&nbsp;</td>
+					<td>&nbsp;</td>
+				</tr>
+				<tr>
+					<td width="280" align="right">Time Already Served:</td>
+					<td width="60">&nbsp;</td>
+					<td><input type="text" READONLY style="border-style:none; background-color: #ffffff" id="timeserved" name="timeserved"></td>
+				</tr>
+				<tr>
+					<td width="280" align="right">Days Earned per Month:</td>
+					<td width="60">&nbsp;</td>
+					<td><input type="text" READONLY style="border-style:none; background-color: #ffffff" id="daysearnedpermonth" name="daysearnedpermonth"></td>
+				</tr>
+				<tr>
+					<td width="280" align="right">Previous Earned Days:</td>
+					<td width="60">&nbsp;</td>
+					<td><input type="text" READONLY style="border-style:none; background-color: #ffffff" id="previousdaysearned" name="previousdaysearned"></td>
+				</tr>
+				<tr>
+					<td width="280" align="right">Misc Earned Days:</td>
+					<td width="60">&nbsp;</td>
+					<td><input type="text" READONLY style="border-style:none; background-color: #ffffff" id="miscearneddays" name="miscearneddays"></td>
+				</tr>
+				<tr>
+					<td width="280" align="right">Days Lost:</td>
+					<td width="60">&nbsp;</td>
+					<td><input type="text" READONLY style="border-style:none; background-color: #ffffff" id="dayslost" name="dayslost"></td>
+				</tr>
+				<tr>
+					<td width="280" align="right">&nbsp;</td>
+					<td width="60">&nbsp;</td>
+					<td>&nbsp;</td>
+				</tr>
+				<tr>
+					<td width="280" align="right">State Days Off:</td>
+					<td width="60">&nbsp;</td>
+					<td><input type="text" READONLY style="border-style:none; background-color: #ffffff" id="statedaysoff" name="statedaysoff"></td>
+				</tr>
+				<tr>
+					<td width="280" align="right">Work Days Off:</td>
+					<td width="60">&nbsp;</td>
+					<td><input type="text" READONLY style="border-style:none; background-color: #ffffff" id="workdaysoff" name="workdaysoff"></td>
+				</tr>
+				<tr>
+					<td width="280" align="right">Days to Serve:</td>
+					<td width="60">&nbsp;</td>
+					<td><input type="text" READONLY style="border-style:none; background-color: #ffffff" id="daystoserve" name="daystoserve"></td>
+				</tr>
+				<tr>
+					<td width="280" align="right">Release Date:</td>
+					<td width="60">&nbsp;</td>
+					<td><input type="text" READONLY style="border-style:none; background-color: #ffffff" id="releasedate" name="releasedate"></td>
+				</tr>
+				<tr>
+					<td width="280" align="right">&nbsp;</td>
+					<td width="60">&nbsp;</td>
+					<td>&nbsp;</td>
+				</tr>
+				<tr>
+					<td width="280" align="right">COMMENTS:</td>
+					<td width="60">&nbsp;</td>
+					<td><input type="text" READONLY SIZE="50,40" style="border-style:none; background-color: #ffffff" id="comments" name="comments"></td>
+				</tr>
+			</table>
+		</BODY>
+</HTML>

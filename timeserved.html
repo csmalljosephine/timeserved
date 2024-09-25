@@ -1,0 +1,515 @@
+<script language=javascript>
+//Project:		Time Served Inmate time served calculator.
+//By:			Chancey Small
+//Date Created: 4-21-04
+//Update History:
+/*
+	4-27-04 -	Added Input validation system complete with revelent field indicators and field background
+				highlighting. I also changed the printable view from being a form submitted page to being a child of
+				the main app window.
+	
+	4-26-04 -	Compared calculated results to existing Time Served application for consistency and accuracy.
+	
+	4-23-04 -	Finished core calculations and most of the interface. Started printable report view.
+	
+	4-22-04 -	Ported and optimized more of the logic, also finished special date functions that weren't
+				available in stock javascript libraries. DayOfYear() = ObjectPal's doy();  IsLeap() = ObjectPal's isleap();
+			
+	4-21-04 -	Threw together a rough interface identical to the existing but made a few cosmetic changes that should
+				prove a little easier on the eyes. I also started some of the input handling and logic. I'll have to
+				put	together a few special use functions to help with some of the date calculations that aren't available
+				in javascript as far as I can tell.
+				
+	CLS 2022-02-23 Changed to improved and more broadly supported function DayOfYear(dEndDate, dStartDate)
+*/
+
+//20220407 CLS
+function addDays(date, days) {
+  var result = new Date(date);
+  result.setDate(result.getDate() + days);
+  return result;
+}
+
+function Clear()
+{
+	var varToday = new Date();
+	document.getElementById("today").value			= varToday.getMonth()+1 + "/" + varToday.getDate() + "/" + varToday.getFullYear();
+	document.getElementById("dpsst").value			= "";
+	document.getElementById("idnumber").value		= "";
+	document.getElementById("flname").value			= "";
+	document.getElementById("startdate").value		= "";
+	document.getElementById("dayssentenced").value		= new Number(0);
+	document.getElementById("timeserved").value		= new Number(0);
+	document.getElementById("paroleviolation").value	= "N";
+	document.getElementById("workprogram").value		= "N";
+	document.getElementById("wpstartdate").value		= "";
+	document.getElementById("daysearnedpermonth").value	= new Number(0);
+	document.getElementById("previousearneddays").value	= new Number(0);
+	document.getElementById("miscearneddays").value		= new Number(0);
+	document.getElementById("dayslost").value		= new Number(0);
+	document.getElementById("comments").value		= "";
+	
+	document.getElementById("workdaysoff").value		= new Number(0);
+	document.getElementById("statedaysoff").value		= new Number(0);
+	document.getElementById("releasedate").value		= "";
+	document.getElementById("daystoserve").value		= new Number(0);
+}
+
+function ClearErrors()
+{
+	document.getElementById("wpstartdate_err").value	= "";
+	document.getElementById("startdate_err").value		= "";
+	document.getElementById("dpsst_err").value		= "";
+	document.getElementById("idnumber_err").value		= "";
+	document.getElementById("name_err").value		= "";
+	
+	document.getElementById("startdate").style.backgroundColor	= "#ffffff";
+	document.getElementById("wpstartdate").style.backgroundColor	= "#ffffff";
+	document.getElementById("dpsst").style.backgroundColor		= "#ffffff";
+	document.getElementById("idnumber").style.backgroundColor	= "#ffffff";
+	document.getElementById("flname").style.backgroundColor		= "#ffffff";
+}
+
+function Defaults()
+{
+	Clear();
+}
+
+/* Deprecated CLS 2022-02-23 Rewrote this function to improved version
+function DayOfYear(dEndDate, dStartDate)
+{
+	//returns days spanned between endate - startdate. int 1-365
+	var extraday = 0
+	
+	//If dStateDate == null, set it do beginning of year
+	if(dStartDate == null)
+	{
+		dStartDate = new Date(dEndDate.getFullYear(),0,1);
+		extraday = 1; // needs an extra day added because thie will be 12/31/?? of the previous year
+	}
+		
+	return (extraday + (Date.UTC(dEndDate.getFullYear(), dEndDate.getMonth(), dEndDate.getDate()) - Date.UTC(dStartDate.getYear(), dStartDate.getMonth(), dStartDate.getDate())) / 864e5);
+}*/
+function DayOfYear(dEndDate, dStartDate)
+{
+	var extraday = 0;
+	
+	if(dStartDate == null) {
+		dStartDate = new Date(dEndDate.getFullYear(),0,1);
+		extraday = 1;
+	}
+	
+	var diffTime = dEndDate.getTime() - dStartDate.getTime();
+	var diffDays = diffTime / (1000 * 3600 * 24);
+	return (diffDays + extraday) + 1;
+}
+
+
+function IsLeap(dDate)
+{
+	var bLeap;
+		
+	//see if this is a leap year
+	if (( dDate.getFullYear() % 4 == 0) || (dDate.getFullYear() % 100 == 0) || (dDate.getFullYear() % 400 == 0))
+		bLeap = 1;
+	else
+		bLeap = 0;
+		
+	return bLeap;
+}
+
+function ValidateEntries()
+{
+	var bError = false;
+	var dWorkStartDate = new Date(document.getElementById("wpstartdate").value);
+	var dSentStartDate = new Date(document.getElementById("startdate").value);
+	
+	//Work days must be on or after sentence start date (obviously)
+	if(document.getElementById("workprogram").value == "Y" && dWorkStartDate < dSentStartDate)
+	{
+		window.alert("Work program start date must be after Sentence start date. Please correct this problem.");
+		document.getElementById("wpstartdate_err").value		= "-->";
+		document.getElementById("startdate_err").value			= "-->";
+		document.getElementById("startdate").style.backgroundColor 	= "#ff9999";
+		document.getElementById("wpstartdate").style.backgroundColor 	= "#ff9999";
+		bError = true;
+	}
+	
+	//Make sure the following fields have text in them
+	if(document.getElementById("dpsst").value.length == false)
+	{
+		window.alert("DPSST field must be filled in.");
+		bError = true;
+		document.getElementById("dpsst_err").value 			= "-->";
+		document.getElementById("dpsst").style.backgroundColor 		= "#ff9999";
+	}
+	if(document.getElementById("idnumber").value.length == false)
+	{	
+		window.alert("ID # field must be filled in.");
+		bError = true;
+		document.getElementById("idnumber_err").value 			= "-->";
+		document.getElementById("idnumber").style.backgroundColor 	= "#ff9999";
+	}
+	if(document.getElementById("flname").value.length == false)
+	{	
+		window.alert("Name field must be filled in.");
+		bError = true;
+		document.getElementById("name_err").value 			= "-->";
+		document.getElementById("flname").style.backgroundColor 	= "#ff9999";
+	}
+	
+	//Only proceed to calculation if no errors were found with entered data.
+	if(bError == false)
+	{
+		ClearErrors();
+		Calculate();
+		document.getElementById("printbutton").disabled = false;
+	}
+	
+}
+
+function PrintButton()
+{
+	//re-disable the print button
+	document.getElementById("printbutton").disabled = true;
+	//document.getElementById("submit();
+	//Test using a child window 
+	window.open("report-temp.html");
+}
+
+function Calculate()
+{
+	var nTotalWorkDays		= new Number(0);
+	var dWorkReleaseDate		= new Date();
+	var DAYSSERVED			= new Number();
+	var nWorkMonths			= new Number();
+	var istatedays			= new Number();
+	var arrayWorkdaysTable		= new Array(10);
+	var nDaysServed			= new Number();
+		
+	arrayWorkdaysTable[0] = 0.032;
+	arrayWorkdaysTable[1] = 0.063;
+	arrayWorkdaysTable[2] = 0.091;
+	arrayWorkdaysTable[3] = 0.118;
+	arrayWorkdaysTable[4] = 0.143;
+	arrayWorkdaysTable[5] = 0.167;
+	arrayWorkdaysTable[6] = 0.189;
+	arrayWorkdaysTable[7] = 0.211;
+	arrayWorkdaysTable[8] = 0.231;
+	arrayWorkdaysTable[9] = 0.250;
+
+	//Include the day the sentence actually starts on
+	//document.getElementById("dayssentenced").value = parseInt(document.getElementById("dayssentenced").value,10)+1;
+
+	//CALCULATE STATE DAYS
+	//////////////////////
+	//check parole violation status
+	if(document.getElementById("paroleviolation").value == "N")
+	{
+		//1 state day earned for each 10 days sentenced up to 90
+		if(document.getElementById("dayssentenced").value < 10)
+		{
+			istatedays = 0;
+		}
+		if(document.getElementById("dayssentenced").value > 9 && document.getElementById("dayssentenced").value <= 90)
+		{
+			istatedays = document.getElementById("dayssentenced").value / 10;	
+			
+		}
+		//91 to 180 days, 4 days for each 30 days
+		if(document.getElementById("dayssentenced").value > 90 && document.getElementById("dayssentenced").value < 181)
+		{
+			istatedays = Math.round((document.getElementById("dayssentenced").value * 0.13334));
+		}		
+		//180 to 270 days, 5 days for each 30
+		if(document.getElementById("dayssentenced").value > 180 && document.getElementById("dayssentenced").value < 271)
+		{
+			istatedays = Math.round((document.getElementById("dayssentenced").value * 0.16667));
+		}
+		// 271+ days, 6 days for each 30
+		if(document.getElementById("dayssentenced").value > 270)
+		{
+			istatedays = Math.round((document.getElementById("dayssentenced").value * 0.2));
+		}
+	}
+	else
+	{
+		istatedays = parseInt("0",10);
+	}
+	
+	istatedays = Math.floor(istatedays);
+	document.getElementById("statedaysoff").value = istatedays;
+	
+	//NEWDAYSSENT CALCULATED & RELEASE DATE CALCULATED
+	var dReleaseDate;
+	var dSentStartDate	= new Date(document.getElementById("startdate").value);
+	var nDaysSentenced 	= new Number();
+	var doyStartDate 	= new Number();
+	
+	doyStartDate = DayOfYear(dSentStartDate,null);
+	
+	//document.getElementById("workdaysoff").value = doyStartDate;
+	
+	nDaysSentenced = (parseInt(document.getElementById("dayssentenced").value,10)-1) - istatedays - document.getElementById("timeserved").value - document.getElementById("previousearneddays").value - document.getElementById("miscearneddays").value + parseInt(document.getElementById("dayslost").value,10);
+	
+	var doyReleaseDate = parseInt(doyStartDate,10) + parseInt(Math.floor(nDaysSentenced),10);
+	dReleaseDate = new Date(dSentStartDate.getFullYear(), 0, doyReleaseDate);
+	document.getElementById("daystoserve").value = nDaysSentenced;
+	document.getElementById("releasedate").value = dReleaseDate.getMonth()+1 + "/" + dReleaseDate.getDate() + "/" + dReleaseDate.getFullYear();
+	var dtReleaseDateTest = addDays(dSentStartDate,nDaysServed-1);
+	//document.getElementById("releasedatetest").value =  dtReleaseDateTest.getMonth()+1 + "/" + dtReleaseDateTest.getDate() + "/" + dtReleaseDateTest.getFullYear();
+	document.getElementById("releasedate").value =  dtReleaseDateTest.getMonth()+1 + "/" + dtReleaseDateTest.getDate() + "/" + dtReleaseDateTest.getFullYear();
+	
+	////////////////////
+	//WORK PROGRAM//////
+	////////////////////
+	if(document.getElementById("workprogram").value == "N")
+	{
+	/*	document.getElementById("daysearnedpermonth").value = 0;
+		nDaysSentenced = parseInt(document.getElementById("dayssentenced").value,10) - istatedays - parseInt(document.getElementById("timeserved").value,10) - parseInt(document.getElementById("previousearneddays").value,10) - parseInt(document.getElementById("miscearneddays").value,10) + parseInt(document.getElementById("dayslost").value,10);
+		document.getElementById("timeserved").value = nDaysSentenced;
+
+		strDebug = "Days Sentenced:" + document.getElementById("dayssentenced").value + "\n";
+		strDebug+= "State Days:" + istatedays + "\n";
+		strDebug+= "Time Served:" + document.getElementById("timeserved").value + "\n";
+		strDebug+= "Previous Earned:" + document.getElementById("previousearneddays").value + "\n";
+		strDebug+= "Misc Earned:" + document.getElementById("miscearneddays").value + "\n";
+		strDebug+= "Days Lost:" + document.getElementById("dayslost").value + "\n";
+		alert(strDebug);
+	*/
+		//UPDATE: 07-14-2004 - made identical to workprogram == Y without workday calc.
+		dReleaseDate = new Date(dReleaseDate.getFullYear(), dReleaseDate.getMonth(), dReleaseDate.getDate());
+		
+		nDaysSentenced = (document.getElementById("dayssentenced").value) - istatedays - document.getElementById("timeserved").value - document.getElementById("previousearneddays").value - document.getElementById("miscearneddays").value;
+		nDaysSentenced += parseInt(document.getElementById("dayslost").value,10);
+//		nDaysSentenced -= parseInt(nTotalWorkdays,10);	
+		nDaysServed = nDaysSentenced;
+		
+		document.getElementById("workdaysoff").value = 0;
+		document.getElementById("daystoserve").value = nDaysServed;
+		document.getElementById("releasedate").value = dReleaseDate.getMonth()+1 + "/" + dReleaseDate.getDate() + "/" + dReleaseDate.getFullYear();
+		var dtReleaseDateTest = addDays(dSentStartDate,nDaysServed-1);
+		//document.getElementById("releasedatetest").value =  dtReleaseDateTest.getMonth()+1 + "/" + dtReleaseDateTest.getDate() + "/" + dtReleaseDateTest.getFullYear();
+		document.getElementById("releasedate").value =  dtReleaseDateTest.getMonth()+1 + "/" + dtReleaseDateTest.getDate() + "/" + dtReleaseDateTest.getFullYear();
+	}
+	else
+	{ 
+		//work program start date
+		var nWorkMonths = new Number();
+		dWorkReleaseDate = dReleaseDate;
+		var dWorkStartDate = new Date(document.getElementById("wpstartdate").value);
+	
+	// This is handled my the ValidateEntries() function now	
+	//	if(dWorkStartDate < dSentStartDate)
+	//	{
+	//		window.alert("Work program start date must be after Sentence start date.");
+	//	}
+		var doyWorkdayStart = DayOfYear(dWorkStartDate,null);
+		var doyWorkdayEnd	= DayOfYear(dWorkReleaseDate,null);
+		
+		if(document.getElementById("dayssentenced").value <= 30)	
+		{
+			//calculate extra work days for partial months ORS 169-120
+			// <10				= 1 day
+			// >=10 and < 20	= 2 days
+			// >20				= 3 days
+			
+			//check for crossing year and leap year
+			if(doyWorkdayEnd < doyWorkdayStart)
+			{
+				if(IsLeap(dWorkReleaseDate))
+				{
+					//The following date check was in the original and I'm not certain of it's purpose.
+					var dLegacyDateCheck = new Date(2000,3,1);
+					if(dReleaseDate <  dLegacyDateCheck)
+						{ doyWorkdayEnd += 365; }				
+					else
+						{ doyWorkdayEnd += 366; }
+				}
+				else
+				{
+					doyWorkdayEnd += 365;
+				}
+			}
+			
+			var doyModWorkdays = doyWorkdayEnd - doyWorkdayStart;
+			
+			if(doyModWorkdays == 0)
+				nTotalWorkdays = 0;
+			if(doyModWorkdays > 0 && doyModWorkdays <=9)
+				nTotalWorkdays = 0;
+			if(doyModWorkdays >= 10 && doyModWorkdays <=19)
+				nTotalWorkdays = 1;
+			if(doyModWorkdays >= 20)
+				nTotalWorkdays = 2;
+		}
+		else
+		{
+			//calculate not whole month work days
+			doyWorkdayEnd	= DayOfYear(dWorkReleaseDate,null);
+			
+			if(doyWorkdayEnd < doyWorkdayStart)
+			{
+				if(IsLeap(dWorkReleaseDate))
+					doyWorkdayEnd += 366;
+				else
+					doyWorkdayEnd += 365;
+			}
+			
+			nWorkMonths		= (doyWorkdayEnd - doyWorkdayStart) / 30;
+			doyModWorkdays	= doyWorkdayEnd - doyWorkdayStart;
+		
+			//notice array is populated at top of function declaration.
+			if(document.getElementById("daysearnedpermonth").value)
+			{
+				nTotalWorkdays = arrayWorkdaysTable[document.getElementById("daysearnedpermonth").value-1] * doyModWorkdays;
+			}
+		}
+		
+	//	window.alert("Total work days before round:" + nTotalWorkdays);
+		//Round the total work days calculated .5 rounds up
+		nTotalWorkdays = Math.round(nTotalWorkdays);
+	//	window.alert("Total work days after round:" + nTotalWorkdays);
+		
+		var doySentStart = DayOfYear(dSentStartDate,null);
+
+		//UPDATE: 07-09-2004 - Changed code below based on review of original code
+		//dReleaseDate = new Date(dSentStartDate.getFullYear(), 0, doySentStart+nDaysServed); 
+		dReleaseDate = new Date(dReleaseDate.getFullYear(), dReleaseDate.getMonth(), dReleaseDate.getDate() - parseInt(nTotalWorkdays,10));
+		
+		nDaysSentenced = (document.getElementById("dayssentenced").value) - istatedays - document.getElementById("timeserved").value - document.getElementById("previousearneddays").value - document.getElementById("miscearneddays").value;
+		nDaysSentenced += parseInt(document.getElementById("dayslost").value,10);
+		nDaysSentenced -= parseInt(nTotalWorkdays,10);	
+		nDaysServed = nDaysSentenced;
+		
+		document.getElementById("workdaysoff").value = nTotalWorkdays;
+		document.getElementById("daystoserve").value = nDaysServed;
+		document.getElementById("releasedate").value = dReleaseDate.getMonth()+1 + "/" + dReleaseDate.getDate() + "/" + dReleaseDate.getFullYear();
+		
+		var dtReleaseDateTest = addDays(dSentStartDate,nDaysServed-1);
+		//document.getElementById("releasedatetest").value =  dtReleaseDateTest.getMonth()+1 + "/" + dtReleaseDateTest.getDate() + "/" + dtReleaseDateTest.getFullYear();
+		document.getElementById("releasedate").value =  dtReleaseDateTest.getMonth()+1 + "/" + dtReleaseDateTest.getDate() + "/" + dtReleaseDateTest.getFullYear();
+	}
+}
+</script>
+<HTML>
+<LINK REL=StyleSheet HREF="ui.css" TYPE="text/css" TITLE="Yeehaw">
+<HEAD>
+<META NAME="GENERATOR" Content="Chance">
+<TITLE></TITLE>
+</HEAD>
+<BODY onload="Defaults()">
+<center><FONT face=tahoma size=5>Josephine County - Time Served Calculator </FONT><FONT face=tahoma size=3>v1.2</FONT></center>
+<HR>
+<form name=form1 id=form1 method=post action=report-temp.asp>
+<TABLE BGCOLOR=#efefef BORDER=1 align=center> 
+<TR><TD>
+
+<TABLE BGCOLOR=#efefef BORDER=0 CELLPADDING=0 CELLSPACING=0>
+<TR>
+<TD>
+	<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>
+	<TR>
+	<TD>
+		<TABLE BGCOLOR=#cdcdcd BORDER=0 CELLPADDING=0 CELLSPACING=0>
+		<TR height=34><TD>Today</TD></TR>
+		<TR height=34><TD>DPSST #</TD></TR>
+		<TR height=34><TD>ID #</TD></TR>
+		<TR height=34><TD>Name</TD></TR>
+		<TR height=34><TD>Sentence Start Date</TD></TR>
+		<TR height=34><TD>Days Sentenced</TD></TR>
+		<TR height=34><TD>Time Already Served</TD></TR>
+		<TR height=34><TD>Parole Violation</TD></TR>
+		<TR height=34 bgcolor=#ffff99><TD>Work Program</TD></TR>
+		<TR height=34 bgcolor=#ffff99><TD>Work Progam Start Date</TD></TR>
+		<TR height=34 bgcolor=#ffff99><TD>Days Earned Per Month</TD></TR>
+		<TR height=34><TD>Previous Earned Days</TD></TR>
+		<TR height=34><TD>Misc Earned Days</TD></TR>
+		<TR height=34><TD>Days Lost</TD></TR>
+		<TR height=34><TD>Comments</TD></TR>
+		</TABLE>
+	</TD>
+	<!-- Required fields indicator table -->
+	<TD BGCOLOR=#cdcdcd> 
+		<TABLE BGCOLOR=#cdcdcd BORDER=0 CELLPADDING=0 CELLSPACING=0>
+		<TR height=34><TD>&nbsp;</TD></TR>
+		<TR height=34><TD><input type=text READONLY id=dpsst_err name=dpsst_err style="color:red; background-color: #cdcdcd; border-style: none; width:20px;"></TD></TR>
+		<TR height=34><TD><input type=text READONLY id=idnumber_err name=idnumber_err style="color:red; background-color: #cdcdcd; border-style: none; width:20px;"></TD></TR>
+		<TR height=34><TD><input type=text READONLY id=name_err name=name_err style="color:red; background-color: #cdcdcd; border-style: none; width:20px;"></TD></TR>
+		<TR height=34><TD><input type=text READONLY id=startdate_err name=startdate_err style="color:red; background-color: #cdcdcd; border-style: none; width:20px;"></TD></TR>
+		<TR height=34><TD><input type=text READONLY id=dayssent_err name=dayssent_err style="color:red; background-color: #cdcdcd; border-style: none; width:20px;"></TD></TR>
+		<TR height=34><TD><input type=text READONLY id=timealreadyserved_err name=timealreadyserved_err style="color:red; background-color: #cdcdcd; border-style: none; width:20px;"></TD></TR>
+		<TR height=34><TD><input type=text READONLY id=paroleviolation_err name=paroleviolation_err style="color:red; background-color: #cdcdcd; border-style: none; width:20px;"></TD></TR>
+		<TR height=34 bgcolor=#ffff99><TD><input type=text READONLY id=workprogram_err name=workprogram_err style="color:red; background-color: #ffff99; border-style: none; width:20px;"></TD></TR>
+		<TR height=34 bgcolor=#ffff99><TD><input type=text READONLY id=wpstartdate_err name=wptartdate_err style="color:red; background-color: #ffff99; border-style: none; width:20px;"></TD></TR>
+		<TR height=34 bgcolor=#ffff99><TD><input type=text READONLY id=daysearnedpermonth_err name=daysearnedpermonth_err style="color:red; background-color: #ffff99; border-style: none; width:20px;"></TD></TR>
+		<TR height=34><TD><input type=text READONLY id=previousearneddays_err name=previousearneddays_err style="color:red; background-color: #cdcdcd; border-style: none; width:20px;"></TD></TR>
+		<TR height=34><TD><input type=text READONLY id=miscearneddays_err name=miscearneddays_err style="color:red; background-color: #cdcdcd; border-style: none; width:20px;"></TD></TR>
+		<TR height=34><TD><input type=text READONLY id=dayslost_err name=dayslost_err style="color:red; background-color: #cdcdcd; border-style: none; width:20px;"></TD></TR>
+		<TR height=34><TD><input type=text READONLY id=comments_err name=comments_err style="color:red; background-color: #cdcdcd; border-style: none; width:20px;"></TD></TR>
+		</TABLE>
+	</TD>
+
+	<TD>
+		<TABLE BGCOLOR=#cdcdcd BORDER=0 CELLPADDING=0 CELLSPACING=0>
+		<TR height=34><TD><input style="background-color: #cdcdcd;" READONLY type=text id=today name=today></TD></TR>
+		<TR height=34><TD><input type=text id=dpsst name=dpsst></TD></TR>
+		<TR height=34><TD><input type=text id=idnumber name=idnumber></TD></TR>
+		<TR height=34><TD><input type=text id=flname name=flname></TD></TR>
+		<TR height=34><TD><input type=text id=startdate name=startdate></TD></TR>
+		<TR height=34><TD><input type=text id=dayssentenced name=dayssentenced></TD></TR>
+		<TR height=34><TD><input type=text id=timeserved name=timeserved></TD></TR>
+		<TR height=34><TD><select id=paroleviolation name=paroleviolation><option value="Y">Yes</option><option selected value="N">No</option></select></TD></TR>
+		<TR height=34 bgcolor=#ffff99><TD><select id=workprogram name=workprogram><option value="Y">Yes</option><option selected value="N">No</option></select></TD></TR>
+		<TR height=34 bgcolor=#ffff99><TD><input type=text id=wpstartdate name=wpstartdate></TD></TR>
+		<TR height=34 bgcolor=#ffff99><TD><input type=text id=daysearnedpermonth name=daysearnedpermonth></TD></TR>
+		<TR height=34><TD><input type=text id=previousearneddays name=previousearneddays></TD></TR>
+		<TR height=34><TD><input type=text id=miscearneddays name=miscearneddays></TD></TR>
+		<TR height=34><TD><input type=text id=dayslost name=dayslost></TD></TR>
+		<TR height=34><TD><input type=text id=comments name=comments></TD></TR>
+		</TABLE>
+	</TD>
+	</TR>
+	</TABLE>
+</TD>
+<TD BGCOLOR=#cdcdcd> 
+&nbsp;&nbsp;&nbsp;
+</TD>
+<TD BGCOLOR=#bbbbbb>
+&nbsp;&nbsp;
+</TD>
+
+<TD BGCOLOR=#bbbbbb>
+	<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0>
+	<TR><TD align=center>State Days Off</TD></TR>
+	<TR><TD align=center><input style="background-color: #cdcdcd;" READONLY type=text id=statedaysoff name=statedaysoff></TD></TR>
+	<TR><TD align=center>Work Days Off</TD></TR>
+	<TR><TD align=center><input style="background-color: #cdcdcd;" READONLY type=text id=workdaysoff name=workdaysoff></TD></TR>
+	<TR><TD align=center>Release Date</TD></TR>
+	<TR><TD align=center><input style="background-color: #cdcdcd;" READONLY type=text id=releasedate name=releasedate></TD></TR>
+<!--	<TR><TD align=center>Testing: <input style="background-color: #cdcdcd;" READONLY type=text id=releasedatetest name=releasedatetest></TD></TR> -->
+	
+	<TR><TD align=center>Days to Serve</TD></TR>
+	<TR><TD align=center><input style="background-color: #9999cc;" READONLY type=text id=daystoserve name=daystoserve></TD></TR>
+	<TR><TD>&nbsp;</TD></TR>
+	<TR><TD align=center><input type=button onclick="Clear()" id=clear name=clear value="Clear Values"></TD></TR>
+	<TR><TD>&nbsp;</TD></TR>
+	<TR><TD align=center><input tabindex=0 onclick="ValidateEntries()" type=button id=calculate name=calculate value="Calculate Time Served"></TD></TR>
+	<TR><TD>&nbsp;</TD></TR>
+	<TR><TD>&nbsp;</TD></TR>
+	<TR><TD>&nbsp;</TD></TR>
+	<TR><TD>&nbsp;</TD></TR>
+	<TR><TD align=center><input DISABLED onclick="PrintButton();" type=button id=printbutton name=printbutton value="Printable Version"></TD></TR>
+	</TABLE>
+</TD>
+<TD BGCOLOR=#bbbbbb>
+&nbsp;&nbsp;
+</TD>
+</TR>
+</TABLE>
+
+</TD></TR>
+</TABLE>
+</form>
+</BODY>
+</HTML>

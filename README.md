@@ -5,3 +5,4 @@ with the only dependency being any (probably) web browser.
 The calculations are based on various statutes specific to Oregon (ORS). In most instances, those should be referenced in comments.
 
 I've created this respository for any other counties that may be interested or find it useful. If you do find it useful, awesome!
+
